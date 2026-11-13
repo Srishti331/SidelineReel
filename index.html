@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SidelineReel – Confident Roster Tagging (prototype)</title>
+<style>
+  :root{--bg:#f6f5f1;--card:#fff;--ink:#1b1f1d;--mute:#66706b;--line:#e2e0d8;--green:#1f6f4a;--green-soft:#e3f1e9;--amber:#a86200;--amber-soft:#fbefd9;--red:#a8322a;--red-soft:#f8e3e1;--blue:#24508f;}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--ink);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  header h1{font-size:17px;margin:0;font-weight:650}
+  header small{color:#b9c2bd;display:block;font-weight:400}
+  nav{display:flex;gap:6px;flex-wrap:wrap}
+  nav button{background:transparent;border:1px solid #4a524e;color:#dfe5e1;padding:7px 12px;border-radius:8px;cursor:pointer;font:inherit;font-size:14px}
+  nav button.on{background:#fff;color:var(--ink);border-color:#fff}
+  main{max-width:1060px;margin:0 auto;padding:20px}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+  .stat b{display:block;font-size:24px}
+  .stat span{color:var(--mute);font-size:13px}
+  h2{font-size:18px;margin:0 0 4px}
+  .sub{color:var(--mute);margin:0 0 14px;font-size:14px}
+  .banner{background:var(--amber-soft);border:1px solid #efd3a3;color:#5e3a00;padding:10px 14px;border-radius:10px;margin-bottom:14px}
+  .banner.ok{background:var(--green-soft);border-color:#b8dcc7;color:#14492f}
+  .clip{display:grid;grid-template-columns:200px 1fr;gap:16px;margin-bottom:12px}
+  @media (max-width:640px){.clip{grid-template-columns:1fr}}
+  .frame{border-radius:10px;overflow:hidden;background:#2f7d4f;aspect-ratio:16/10;position:relative}
+  .frame svg{width:100%;height:100%;display:block}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;margin-right:6px;font-weight:600}
+  .t-amber{background:var(--amber-soft);color:var(--amber)} .t-red{background:var(--red-soft);color:var(--red)} .t-green{background:var(--green-soft);color:var(--green)} .t-grey{background:#eceae4;color:#4c534f}
+  .why{margin:6px 0 10px;font-size:14px}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  button.act{font:inherit;font-size:14px;padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button.act:hover{border-color:var(--ink)}
+  button.primary{background:var(--green);border-color:var(--green);color:#fff}
+  button.primary:hover{background:#185a3c}
+  button.danger{color:var(--red);border-color:#e9c2bd}
+  select{font:inherit;font-size:14px;padding:7px;border-radius:8px;border:1px solid var(--line)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th{color:var(--mute);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  .thumb{width:72px;height:45px;border-radius:6px;overflow:hidden;background:#ddd}
+  .thumb svg{width:100%;height:100%}
+  .side{flex:0 0 300px} .grow{flex:1 1 480px}
+  .muted{color:var(--mute)}
+  .log{font-size:13px;max-height:180px;overflow:auto;margin:0;padding-left:18px}
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:9}
+  .modal{background:#fff;border-radius:12px;padding:20px;max-width:440px}
+  .done{opacity:.55}
+  .intro{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;margin-bottom:16px}
+  @media (max-width:800px){.intro{grid-template-columns:1fr}}
+  .intro h3{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+  .intro p,.intro li{font-size:14px;margin:0 0 4px}
+  .intro ul{margin:0;padding-left:18px}
+  .steps{list-style:none;margin:0;padding:0}
+  .steps li{display:flex;gap:8px;align-items:flex-start;padding:4px 0;cursor:pointer;font-size:14px}
+  .steps li .ck{flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-top:2px}
+  .steps li.ok .ck{background:var(--green);border-color:var(--green);color:#fff}
+  .steps li.ok span.tx{color:var(--mute);text-decoration:line-through}
+  .steps li.next span.tx{font-weight:650}
+  footer{text-align:center;color:var(--mute);font-size:13px;padding:24px}
+  footer a{color:var(--blue)}
+  input[type=range]{width:100%}
+  .pill{font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>SidelineReel · Confident Roster Tagging</h1><small>Prototype · Ridgeline Youth Soccer · U12 Girls · Week 9 · sample data</small></div>
+  <nav>
+    <button data-v="review" class="on">1 · Coach: Review held clips</button>
+    <button data-v="recap">2 · Coach: Reels &amp; recap</button>
+    <button data-v="parent">3 · Parent: My kid's reel</button>
+    <button data-v="rules">How clips get held</button>
+  </nav>
+</header>
+<main><div id="intro"></div><div id="app"></div></main>
+<div class="modal-bg" id="modal"><div class="modal" id="modalBody"></div></div>
+<footer>Prototype for the Ajaia PM assessment · SidelineReel is part of the <a href="https://ajaia.ai" target="_blank" rel="noopener">Ajaia</a> suite (https://ajaia.ai) · all names and clips are invented sample data · <button class="act" id="reset" style="font-size:12px;padding:4px 8px">Reset demo</button></footer>
+
+<script>
+// ---------- Sample data ----------
+const ROSTER = [
+  {n:1,name:"Ava R."},{n:3,name:"Leah P."},{n:4,name:"Mia T."},{n:7,name:"Zoe K."},
+  {n:8,name:"Isla M."},{n:9,name:"Lily C."},{n:11,name:"Nora B."},{n:12,name:"Ella S."},
+  {n:14,name:"Sofia D."},{n:21,name:"Grace W."},{n:23,name:"Ruby H."}
+];
+const CLIPS0 = [
+  {id:"c1",t:"08:12",type:"Goal",det:14,conf:0.98,truth:14},
+  {id:"c2",t:"11:40",type:"Save",det:4,conf:0.71,truth:4},
+  {id:"c3",t:"15:05",type:"Assist",det:9,conf:0.96,truth:9},
+  {id:"c4",t:"19:33",type:"Goal",det:11,conf:0.88,truth:1},
+  {id:"c5",t:"22:10",type:"Big play",det:21,conf:0.90,truth:12},
+  {id:"c6",t:"27:48",type:"Tackle",det:23,conf:0.99,truth:23},
+  {id:"c7",t:"31:02",type:"Goal",det:7,conf:0.97,truth:7},
+  {id:"c8",t:"36:55",type:"Save",det:8,conf:0.64,truth:3},
+  {id:"c9",t:"41:17",type:"Big play",det:14,conf:0.98,truth:4},
+  {id:"c10",t:"44:30",type:"Assist",det:12,conf:0.99,truth:12},
+  {id:"c11",t:"48:09",type:"Goal",det:9,conf:0.98,truth:9},
+  {id:"c12",t:"52:41",type:"Big play",det:1,conf:0.99,truth:1}
+];
+
+// ---------- Rules (the logic the spec asks engineering to build) ----------
+let RULES = {low:0.85, confusableBar:0.97};
+const LOOKALIKE = [["1","7"],["3","8"],["6","8"],["5","6"],["0","8"]];
+function confusable(a,b){
+  a=String(a); b=String(b); if(a===b) return null;
+  if(a.length!==b.length && (b.includes(a)||a.includes(b))) return "one number is inside the other";
+  if(a.length===2 && a===b.split("").reverse().join("")) return "same digits, swapped";
+  if(a.length===b.length){
+    let diff=[]; for(let i=0;i<a.length;i++) if(a[i]!==b[i]) diff.push([a[i],b[i]]);
+    if(diff.length===1 && LOOKALIKE.some(p=>(p[0]===diff[0][0]&&p[1]===diff[0][1])||(p[1]===diff[0][0]&&p[0]===diff[0][1]))) return "digits look alike ("+diff[0][0]+"/"+diff[0][1]+")";
+  }
+  return null;
+}
+function lookalikesOf(n){ return ROSTER.filter(p=>confusable(n,p.n)).map(p=>({p,why:confusable(n,p.n)})); }
+function holdReason(c){
+  const la = lookalikesOf(c.det);
+  if(c.conf < RULES.low) return {held:true, kind:"low", text:`Low confidence (${pct(c.conf)}) reading #${c.det}`, la};
+  if(la.length && c.conf < RULES.confusableBar) return {held:true, kind:"lookalike", text:`#${c.det} looks like ${la.map(x=>"#"+x.p.n).join(", ")} on this roster`, la};
+  return {held:false, la};
+}
+const pct = x => Math.round(x*100)+"%";
+const byNum = n => ROSTER.find(p=>p.n===n);
+
+// ---------- State ----------
+let S;
+function init(){
+  S = {clips: CLIPS0.map(c=>({...c})), view:"review", sent:false, parentKid:14, log:[]};
+  S.clips.forEach(c=>{ const h=holdReason(c); c.status = h.held ? "held" : "auto"; c.assigned = h.held ? null : c.det; });
+}
+function reclassify(){ // when thresholds change, only touch clips nobody has acted on yet
+  S.clips.forEach(c=>{ if(c.status==="held"||c.status==="auto"){ const h=holdReason(c); c.status=h.held?"held":"auto"; c.assigned=h.held?null:c.det; }});
+}
+function logIt(s){ S.log.unshift(new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+" · "+s); }
+
+// ---------- Fake video frame ----------
+function frame(c, small){
+  const shown = String(c.det); const blur = c.conf<0.85 ? 1.6 : (c.conf<0.97?0.6:0);
+  return `<svg viewBox="0 0 160 100" aria-label="clip frame, jersey ${shown}">
+    <rect width="160" height="100" fill="#2f7d4f"/><rect y="62" width="160" height="38" fill="#2a7247"/>
+    <line x1="80" y1="0" x2="80" y2="100" stroke="#ffffff55"/><circle cx="80" cy="50" r="18" fill="none" stroke="#ffffff55"/>
+    <g transform="translate(${small?62:58},20)">
+      <circle cx="18" cy="6" r="7" fill="#e9c6a5"/>
+      <path d="M4 16 h28 l4 10 -6 2 v26 h-24 v-26 l-6 -2z" fill="#c9302c"/>
+      <text x="18" y="42" text-anchor="middle" font-size="${shown.length>1?14:17}" font-weight="800" fill="#fff" style="filter:blur(${blur}px)">${shown}</text>
+      <rect x="9" y="54" width="7" height="16" fill="#1b1f1d"/><rect x="20" y="54" width="7" height="16" fill="#1b1f1d"/>
+    </g>
+    <circle cx="${small?120:118}" cy="78" r="5" fill="#fff"/>
+    ${small?"":`<text x="6" y="12" font-size="8" fill="#fff">${c.t} · ${c.type}</text>`}
+  </svg>`;
+}
+
+// ---------- Views ----------
+function statsBar(){
+  const held=S.clips.filter(c=>c.status==="held").length;
+  const auto=S.clips.filter(c=>c.status==="auto").length;
+  const confd=S.clips.filter(c=>c.status==="confirmed").length;
+  const flagged=S.clips.filter(c=>c.status==="flagged").length;
+  return `<div class="stats">
+    <div class="card stat"><b>${S.clips.length}</b><span>highlight clips found this game</span></div>
+    <div class="card stat"><b>${auto}</b><span>auto-tagged (confident, no look-alike)</span></div>
+    <div class="card stat"><b style="color:var(--amber)">${held}</b><span>held for coach review</span></div>
+    <div class="card stat"><b>${confd}</b><span>confirmed by coach</span></div>
+    <div class="card stat"><b style="color:var(--red)">${flagged}</b><span>flagged "not my kid" by parents</span></div>
+  </div>`;
+}
+
+function vReview(){
+  const held = S.clips.filter(c=>c.status==="held");
+  const flagged = S.clips.filter(c=>c.status==="flagged");
+  let h = statsBar();
+  h += `<h2>Clips that need you before Sunday's recap</h2>
+  <p class="sub">We weren't sure whose highlight these are. One tap each. Anything you skip stays out of personal reels (it still appears, untagged, in the team recap).</p>`;
+  h += held.length ? `<div class="banner">${held.length} clip${held.length>1?"s":""} held · recap goes out Sunday 9:00 AM family-local time</div>`
+                   : `<div class="banner ok">All clear. Nothing waiting on you. <button class="act" onclick="go('recap')">Go to reels &amp; recap →</button></div>`;
+  held.forEach(c=>{
+    const r = holdReason(c);
+    const cands = [byNum(c.det), ...r.la.map(x=>x.p)].filter(Boolean);
+    h += `<div class="card clip">
+      <div class="frame">${frame(c)}</div>
+      <div>
+        <span class="tag ${r.kind==="low"?"t-red":"t-amber"}">${r.kind==="low"?"Unclear number":"Look-alike number"}</span>
+        <span class="tag t-grey">${c.type} · ${c.t}</span>
+        <p class="why"><b>Why it's here:</b> ${r.text}${r.la.length?` (${r.la.map(x=>"#"+x.p.n+": "+x.why).join("; ")})`:""}. Model read <b>#${c.det}</b> at ${pct(c.conf)}.</p>
+        <div class="btns">
+          <span class="muted" style="font-size:13px">Whose highlight is this?</span>
+          ${cands.map(p=>`<button class="act primary" onclick="assign('${c.id}',${p.n})">#${p.n} ${p.name}</button>`).join("")}
+          <select onchange="if(this.value) assign('${c.id}',+this.value)">
+            <option value="">Someone else…</option>
+            ${ROSTER.filter(p=>!cands.includes(p)).map(p=>`<option value="${p.n}">#${p.n} ${p.name}</option>`).join("")}
+          </select>
+          <button class="act danger" onclick="discard('${c.id}')">Not our player / can't tell</button>
+        </div>
+      </div></div>`;
+  });
+  if(flagged.length){
+    h += `<h2 style="margin-top:22px">Flagged by parents</h2><p class="sub">Already pulled from the kid's reel. Re-tag it if you know who it is.</p>`;
+    flagged.forEach(c=>{
+      h += `<div class="card clip"><div class="frame">${frame(c)}</div><div>
+        <span class="tag t-red">Parent said "not my kid"</span><span class="tag t-grey">${c.type} · ${c.t}</span>
+        <p class="why">Was in <b>#${c.flaggedFrom} ${byNum(c.flaggedFrom).name}</b>'s reel. Model read #${c.det} at ${pct(c.conf)}.</p>
+        <div class="btns">
+          <select onchange="if(this.value) assign('${c.id}',+this.value)"><option value="">Assign to…</option>
+          ${ROSTER.filter(p=>p.n!==c.flaggedFrom).map(p=>`<option value="${p.n}">#${p.n} ${p.name}</option>`).join("")}</select>
+          <button class="act danger" onclick="discard('${c.id}')">Leave out</button>
+        </div></div></div>`;
+    });
+  }
+  return h;
+}
+
+function reelFor(n){ return S.clips.filter(c=>(c.status==="auto"||c.status==="confirmed") && c.assigned===n); }
+function vRecap(){
+  const held = S.clips.filter(c=>c.status==="held").length;
+  let h = statsBar() + `<div class="row"><div class="card grow">
+    <h2>Personal reels this week</h2><p class="sub">Only auto-tagged or coach-confirmed clips go into a kid's reel. The thumbnail is always a confirmed or high-confidence clip.</p>
+    <table><thead><tr><th>Player</th><th>Thumbnail</th><th>Clips in reel</th><th>Status</th></tr></thead><tbody>`;
+  ROSTER.forEach(p=>{
+    const r = reelFor(p.n);
+    const pending = S.clips.filter(c=>c.status==="held" && (c.det===p.n || lookalikesOf(c.det).some(x=>x.p.n===p.n))).length;
+    const thumb = r.length ? [...r].sort((a,b)=>b.conf-a.conf)[0] : null;
+    h += `<tr><td><b>#${p.n}</b> ${p.name}</td>
+      <td><div class="thumb">${thumb?frame(thumb,true):""}</div></td>
+      <td>${r.length ? r.map(c=>c.type).join(", ") : '<span class="muted">none yet</span>'}</td>
+      <td>${pending?`<span class="tag t-amber">${pending} possible clip${pending>1?"s":""} awaiting review</span>`: r.length?'<span class="tag t-green">Ready</span>':'<span class="tag t-grey">No reel this week</span>'}</td></tr>`;
+  });
+  h += `</tbody></table></div>
+    <div class="card side"><h2>Send weekly recap</h2>
+      <p class="sub">Delivered Sunday 9:00 AM in each family's time zone (not at processing time).</p>
+      ${S.sent ? `<div class="banner ok">Recap and ${ROSTER.filter(p=>reelFor(p.n).length).length} personal reels sent.</div>`
+               : `<button class="act primary" style="width:100%" onclick="trySend()">Approve &amp; schedule recap</button>
+                  ${held?`<p class="pill" style="margin-top:8px">${held} clip(s) still unreviewed. You'll be asked before they're left out.</p>`:""}`}
+      <h2 style="margin-top:18px;font-size:15px">Activity</h2>
+      ${S.log.length?`<ul class="log">${S.log.map(l=>`<li>${l}</li>`).join("")}</ul>`:'<p class="muted" style="font-size:13px">Nothing yet.</p>'}
+    </div></div>`;
+  return h;
+}
+
+function vParent(){
+  const p = byNum(S.parentKid); const r = reelFor(p.n);
+  let h = `<div class="row"><div class="card grow">
+    <div class="btns" style="justify-content:space-between;margin-bottom:10px">
+      <div><h2>${p.name}'s highlights · Week 9</h2><p class="sub" style="margin:0">Ridgeline U12 Girls vs. Cedar Park</p></div>
+      <label class="muted" style="font-size:13px">Viewing as parent of
+        <select onchange="S.parentKid=+this.value;render()">${ROSTER.map(x=>`<option value="${x.n}" ${x.n===p.n?"selected":""}>#${x.n} ${x.name}</option>`).join("")}</select></label>
+    </div>`;
+  if(!r.length) h += `<div class="banner">No confirmed highlights for ${p.name} yet this week. You'll still get the team recap Sunday morning.</div>`;
+  r.forEach(c=>{
+    h += `<div class="card clip"><div class="frame">${frame(c)}</div><div>
+      <span class="tag t-grey">${c.type} · ${c.t}</span>${c.status==="confirmed"?'<span class="tag t-green">Confirmed by coach</span>':""}
+      <p class="why">Tagged to #${p.n} ${p.name}.</p>
+      <div class="btns"><button class="act" onclick="toast('Share sheet would open here.')">Share</button>
+      <button class="act danger" onclick="flag('${c.id}',${p.n})">Not my kid</button></div></div></div>`;
+  });
+  h += `</div><div class="card side"><h2>What "Not my kid" does</h2>
+    <p class="sub">One tap removes the clip from this reel right away, with no form to fill in. Your coach sees it in their review list and can re-tag it to the right player.</p>
+    <p class="sub">Try it: as #14 Sofia's parent, the 41:17 "Big play" was actually #4 (the scenario from this week's Ridgeline ticket).</p></div></div>`;
+  return h;
+}
+
+function vRules(){
+  const groups = [];
+  ROSTER.forEach(a=>ROSTER.forEach(b=>{ if(a.n<b.n){ const w=confusable(a.n,b.n); if(w) groups.push(`<tr><td>#${a.n} ${a.name}</td><td>#${b.n} ${b.name}</td><td>${w}</td></tr>`);} }));
+  return `<div class="row"><div class="card grow"><h2>Look-alike numbers on this roster</h2>
+    <p class="sub">Computed automatically when the roster is saved. This is the pattern in all three wrong-kid tickets (4/14, 1/11, swapped digits).</p>
+    <table><thead><tr><th>Number</th><th>Can be misread as</th><th>Why</th></tr></thead><tbody>${groups.join("")}</tbody></table></div>
+    <div class="card side"><h2>Hold rules</h2>
+      <p class="sub">A clip is held for coach review if either is true:</p>
+      <p><b>A.</b> Confidence below <b id="lv">${pct(RULES.low)}</b></p>
+      <input type="range" min="0.5" max="0.99" step="0.01" value="${RULES.low}" oninput="RULES.low=+this.value;document.getElementById('lv').textContent=pct(RULES.low);reclassify();upd()">
+      <p><b>B.</b> Number has a look-alike on the roster and confidence below <b id="cv">${pct(RULES.confusableBar)}</b></p>
+      <input type="range" min="0.5" max="1" step="0.01" value="${RULES.confusableBar}" oninput="RULES.confusableBar=+this.value;document.getElementById('cv').textContent=pct(RULES.confusableBar);reclassify();upd()">
+      <p class="sub" id="hc" style="margin-top:12px"></p>
+      <p class="pill">Thresholds are server config, not coach-facing. Shown here so reviewers can see the logic is live.</p></div></div>`;
+}
+function upd(){ const n=S.clips.filter(c=>c.status==="held").length; const el=document.getElementById('hc'); if(el) el.textContent=`With these settings: ${n} of ${S.clips.length} clips held for review.`; }
+
+// ---------- Actions ----------
+function assign(id,n){ const c=S.clips.find(x=>x.id===id); c.assigned=n; c.status="confirmed"; logIt(`${c.type} ${c.t} confirmed as #${n} ${byNum(n).name}`+(c.truth===n?"":" (note: demo ground truth was #"+c.truth+")")); render(); }
+function discard(id){ const c=S.clips.find(x=>x.id===id); c.status="discarded"; c.assigned=null; logIt(`${c.type} ${c.t} left out of personal reels`); render(); }
+function flag(id,from){ const c=S.clips.find(x=>x.id===id); c.status="flagged"; c.flaggedFrom=from; c.assigned=null; logIt(`Parent of #${from} flagged ${c.type} ${c.t} "not my kid"`); toast("Removed from the reel. The coach has been asked to re-tag it."); render(); }
+function trySend(){
+  const held=S.clips.filter(c=>c.status==="held");
+  if(!held.length){ doSend(); return; }
+  modal(`<h2>${held.length} clip(s) not reviewed</h2><p class="sub">If you send now, these stay out of every personal reel and appear only in the team recap, with no name attached. You can't add them to reels after sending this week.</p>
+    <div class="btns"><button class="act" onclick="closeModal();go('review')">Review them first</button><button class="act primary" onclick="held().forEach(c=>c.status='skipped');closeModal();doSend()">Send without them</button></div>`);
+}
+const held=()=>S.clips.filter(c=>c.status==="held");
+function doSend(){ S.sent=true; logIt("Recap approved, scheduled for Sun 9:00 AM family-local"); render(); }
+function modal(html){ document.getElementById('modalBody').innerHTML=html; document.getElementById('modal').style.display='flex'; }
+function closeModal(){ document.getElementById('modal').style.display='none'; }
+function toast(t){ modal(`<p>${t}</p><button class="act primary" onclick="closeModal()">OK</button>`); }
+const VIEWS=["review","recap","parent","rules"];
+function go(v){ if(location.hash!=="#"+v){ location.hash=v; return; } S.view=v; render(); try{window.scrollTo(0,0)}catch(e){} }
+window.addEventListener('hashchange',()=>{ const v=location.hash.slice(1); if(VIEWS.includes(v)){ S.view=v; render(); try{window.scrollTo(0,0)}catch(e){} } });
+function stepsDone(){
+  const c=id=>S.clips.find(x=>x.id===id);
+  return [
+    c("c4").status==="confirmed",
+    !!c("c9").flaggedFrom,
+    c("c9").status==="confirmed" && c("c9").assigned===4,
+    S.sent
+  ];
+}
+function renderIntro(){
+  const d=stepsDone(); const nxt=d.indexOf(false);
+  const steps=[["review","Review: the #11 Goal at 19:33. Assign it to <b>#1 Ava</b>"],
+               ["parent","Parent: as <b>#14 Sofia</b>'s parent, tap <b>Not my kid</b> on the 41:17 Big play"],
+               ["review","Review: re-tag that flagged clip to <b>#4 Mia</b>"],
+               ["recap","Reels &amp; recap: <b>Approve &amp; schedule</b> (note the unreviewed-clips warning)"]];
+  const health=S.clips.length; const auto=S.clips.filter(x=>x.status==="auto").length;
+  document.getElementById('intro').innerHTML=`<div class="intro">
+    <div class="card"><h3>Why this is #1 on the roadmap</h3><ul>
+      <li>Wrong-kid highlights reported by 3 different clubs this week, all look-alike numbers (4/14, 1/11, swapped digits).</li>
+      <li>Wrong-kid thumbnails are a named reason ~30% of reels go unopened, a gap the 92% share rate leaves out.</li>
+      <li>Ridgeline, our $180k account, is one of the clubs reporting it.</li></ul></div>
+    <div class="card"><h3>The rule</h3>
+      <p>Hold a clip if confidence &lt; ${pct(RULES.low)}, or the number has a roster look-alike and confidence &lt; ${pct(RULES.confusableBar)}.</p>
+      <p>Coach decides in one tap. Unanswered means left out of personal reels, never guessed.</p>
+      <p>Parents can remove any clip with <b>Not my kid</b>.</p>
+      <p class="pill">This game: ${auto}/${health} clips auto-tagged.</p></div>
+    <div class="card"><h3>Try it (${d.filter(Boolean).length}/4)</h3><ol class="steps">
+      ${steps.map((st,i)=>`<li class="${d[i]?"ok":(i===nxt?"next":"")}" onclick="go('${st[0]}')"><span class="ck">${d[i]?"✓":i+1}</span><span class="tx">${st[1]}</span></li>`).join("")}
+    </ol>${nxt===-1?'<p class="pill" style="margin-top:6px">Done. That\'s the full loop: system holds, coach confirms, parent catches what slipped, recap sends clean.</p>':""}</div>
+  </div>`;
+}
+
+// ---------- Render ----------
+function render(){
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.view));
+  const app=document.getElementById('app');
+  app.innerHTML = S.view==="review"?vReview(): S.view==="recap"?vRecap(): S.view==="parent"?vParent(): vRules();
+  if(S.view==="rules") upd();
+  renderIntro();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>go(b.dataset.v));
+document.getElementById('reset').onclick=()=>{ RULES={low:0.85,confusableBar:0.97}; init(); if(location.hash!=="#review") location.hash="review"; else render(); };
+document.getElementById('modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
+init(); { const v=location.hash.slice(1); if(VIEWS.includes(v)) S.view=v; } render();
+</script>
+</body>
+</html>
